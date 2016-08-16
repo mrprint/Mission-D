@@ -80,20 +80,20 @@ final class Field
     // Интерфейсный метод для AStar
     bool isobstacle(int x, int y) const
     { 
-    	return Cell.Attribute.OBSTACLE in cells[y][x].attribs; 
+        return Cell.Attribute.OBSTACLE in cells[y][x].attribs; 
     }
 
     static void cell_to_pos(out SpacePosition position, int x, int y)
     {
-    	position.x = to_space_dim(x);
-    	position.y = to_space_dim(y);
+        position.x = to_space_dim(x);
+        position.y = to_space_dim(y);
     }
 
     static void pos_to_cell(out int x, out int y, ref const SpacePosition position)
     {
-    	float k = WORLD_DIM / 2.0f;
-    	x = cast(int)floor((position.x + 1.0f) * k);
-    	y = cast(int)floor((position.y + 1.0f) * k);
+        float k = WORLD_DIM / 2.0f;
+        x = cast(int)floor((position.x + 1.0f) * k);
+        y = cast(int)floor((position.y + 1.0f) * k);
     }
 }
 
@@ -124,16 +124,16 @@ class Unit
     // Столкнулись ли с другим юнитом
     final bool is_collided(const Unit unit)
     {
-    	float a = position.x - unit.position.x;
-	    float b = position.y - unit.position.y;
-	    return sqrt(a * a + b * b) < size + unit.size;
+        float a = position.x - unit.position.x;
+        float b = position.y - unit.position.y;
+        return sqrt(a * a + b * b) < size + unit.size;
     }
 
     // Осуществляем ход
     void move(float tdelta)
     {
-    	position.x += speed.x * tdelta;
-    	position.y += speed.y * tdelta;
+        position.x += speed.x * tdelta;
+        position.y += speed.y * tdelta;
     }
 }
 

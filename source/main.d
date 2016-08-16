@@ -28,7 +28,7 @@ void main(string[] args)
     the_artillery = new Artillery();
     the_state = GameState.INPROGRESS;
     level = 0;
-	the_coworker.start();
+    the_coworker.start();
     world_setup();
     engine.work_do();
     the_coworker.stop();
@@ -46,9 +46,9 @@ private void sfml_load()
 private struct Coworker
 {
     private {
-    	
+        
         enum Message {
-			_EMPTY,
+            _EMPTY,
             DONE,
             STOPPED
         }
