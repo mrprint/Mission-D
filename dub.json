@@ -1,0 +1,14 @@
+{
+	"name": "mission-d",
+	"authors": [
+		"mrprint"
+	],
+	"description": "The \"Mission\" project in D",
+	"copyright": "Copyright (c) 2016, mrprint",
+	"license": "MIT",
+	"dependencies": {
+		"derelict-sdl2": "~>2.0.0",
+		"derelict-gl3": "~>1.0.18",
+		"derelict-sfml2": "~>3.0.0"
+	}
+}
