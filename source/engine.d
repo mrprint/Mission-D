@@ -19,8 +19,8 @@ const SPR_SIZE = 128.0f;
 const TILE_HOT = SPR_SIZE * 0.75f;
 const SK45 = 0.7071067812f;
 const HYP2 = 2.828427125f;
-const uint TEXT_COLOR = 0xFF0010FF;
-const string RES_DIR = "resources/";
+const TEXT_COLOR = 0xFF0010FF;
+const RES_DIR = "resources/";
 
 final class Engine
 {

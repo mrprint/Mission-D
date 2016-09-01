@@ -19,4 +19,4 @@ const ART_DEV = 0.5f;
 const GUARD_B_SPEED = 2.0f / WORLD_DIM * 2.0f;
 const LEVEL_COMPL = 0.2f;
 
-static const float BANNER_TOUT = 3.0f;
+const BANNER_TOUT = 3.0f;
