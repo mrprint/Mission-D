@@ -18,12 +18,12 @@ struct Set(T)
     
     void opOpAssign(string op)(T val) if (op == "|" || op == "+")
     {
-        storage |= (1 << cast(stortype)val);
+        storage |= (cast(stortype)1 << val);
     }
     
     void opOpAssign(string op)(T val) if (op == "~" || op == "-")
     {
-        storage &= ~(1 << cast(stortype)val);
+        storage &= ~(cast(stortype)1 << val);
     }
 
     void opOpAssign(string op)(Set val) if (op == "|" || op == "+")
@@ -38,7 +38,7 @@ struct Set(T)
 
     const bool opBinaryRight(string op)(T val) if (op == "in")
     {
-        auto cval = (1 << cast(stortype)val);
+        auto cval = (cast(stortype)1 << val);
         return (storage & cval) == cval;
     }
 
