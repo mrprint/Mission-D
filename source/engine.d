@@ -1,4 +1,4 @@
-module mission.engine;
+module engine;
 
 import std.container.array;
 import std.container.dlist;
@@ -9,10 +9,10 @@ import derelict.sfml2.system;
 import derelict.sfml2.window;
 import derelict.sfml2.audio;
 import derelict.sfml2.graphics;
-import mission.settings;
-import mission.flagset;
-import mission.world;
-import mission.main;
+import settings;
+import flagset;
+import world;
+import main;
 
 const BKG_SIZE = 1024.0f;
 const SPR_SIZE = 128.0f;

@@ -1,4 +1,4 @@
-module mission.settings;
+module settings;
 
 const TITLE = "The Mission";
 const SCREEN_W = 1024;

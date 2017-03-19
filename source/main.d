@@ -1,14 +1,14 @@
-module mission.main;
+module main;
 
 import std.concurrency;
 import derelict.sfml2.system;
 import derelict.sfml2.window;
 import derelict.sfml2.audio;
 import derelict.sfml2.graphics;
-import mission.engine;
-import mission.flagset;
-import mission.world;
-import mission.pathfinding;
+import engine;
+import flagset;
+import world;
+import pathfinding;
 
 Coworker the_coworker;
 

@@ -8,3 +8,8 @@ out/
 *.dll
 *.exe
 *.iml
+.dlangide*
+.vs/
+dub.userprefs
+*.pdb
+*.sln

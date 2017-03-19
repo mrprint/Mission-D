@@ -1,4 +1,4 @@
-module mission.flagset;
+module flagset;
 
 /// The set of enumerated
 struct Set(T)

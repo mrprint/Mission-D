@@ -1,14 +1,14 @@
-module mission.world;
+module world;
 
 import std.container.array;
 import std.container.dlist;
 import std.algorithm.comparison;
 import std.random;
 import std.math;
-import mission.settings;
-import mission.flagset;
-import mission.pathfinding;
-import mission.main;
+import settings;
+import flagset;
+import pathfinding;
+import main;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Основные объекты

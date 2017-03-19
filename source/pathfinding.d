@@ -1,4 +1,4 @@
-module mission.pathfinding;
+module pathfinding;
 
 import std.container.array;
 import std.container.binaryheap;
@@ -141,7 +141,13 @@ class AStar(
         void rearrange(ref const Attributes attr, TWeight score)
         {
             AttrsPtr a;
-            while ((a = opened.removeAny()), *a.pa != attr) temp_buff.insert(a);
+            while (true)
+            {
+                a = opened.removeAny();
+                if (*a.pa == attr)
+                    break;
+                temp_buff.insert(a);
+            }
             a.pa.fscore = score;
             opened.insert(a);
             while (!temp_buff.empty)
