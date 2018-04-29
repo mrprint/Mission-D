@@ -92,10 +92,10 @@ class AStar(
                 current = opened_pop();
                 if (current.pos.x == finish_p.x && current.pos.y == finish_p.y)
                     return true;
-                for (int i = 0; i < 8; ++i)
+                foreach (i; 0 .. 8)
                 {
-                    int dx = dirs[i].x;
-                    int dy = dirs[i].y;
+                    immutable dx = dirs[i].x;
+                    immutable dy = dirs[i].y;
                     TCoords npos;
                     npos.x = current.pos.x + dx;
                     npos.y = current.pos.y + dy;
@@ -160,7 +160,7 @@ class AStar(
         void get_path_ofs(out TPath path, ref const TCoords start_p, ref const TCoords finish_p)
         {
             size_t ci = index2d(finish_p.x, finish_p.y);
-            size_t si = index2d(start_p.x, start_p.y);
+            immutable si = index2d(start_p.x, start_p.y);
             while (ci != si)
             {
                 TCoords p;

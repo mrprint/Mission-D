@@ -86,7 +86,7 @@ final class Engine
 
     this()
     {
-        banner_timeout = 0.0f;
+        banner_timeout = 0.0;
         textures = [TextureInfo("skybkg.png"), TextureInfo("sprites.png")];
         sprites = [SpriteInfo(textures[TextureIndexes.BKG], 0, 0, 1024, 1024,
                 0, 0, BKG_SIZE / 2, BKG_SIZE / 2), SpriteInfo(textures[TextureIndexes.SPR], 130,
@@ -168,7 +168,7 @@ final class Engine
             window = sfRenderWindow_create(mode, cast(char*) TITLE, style, null);
             window.sfRenderWindow_setVerticalSyncEnabled(true);
             // Обход SFML's bug #921
-            auto view = sfView_createFromRect(sfFloatRect(0.0f, 0.0f, mode.width, mode.height));
+            auto view = sfView_createFromRect(sfFloatRect(0.0, 0.0, mode.width, mode.height));
             window.sfRenderWindow_setView(view);
             view.sfView_destroy();
         }
@@ -176,9 +176,9 @@ final class Engine
         sizes.screen_w = mode.width;
         sizes.screen_h = mode.height;
 
-        immutable auto tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - (
+        immutable tile_w = (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM - (
                 (sizes.screen_w - (_LC_OFST * 2)) / WORLD_DIM) % 2;
-        immutable auto tile_h = tile_w / 2;
+        immutable tile_h = tile_w / 2;
         sizes.room_w = tile_w * WORLD_DIM;
         sizes.room_h = tile_h * WORLD_DIM;
         sizes.lc_ofst = (sizes.screen_w - sizes.room_w) / 2;
@@ -307,10 +307,10 @@ final class Engine
         if (the_state != GameState.INPROGRESS)
         {
             // Обработка таймаута вывода баннеров выигрыша/поражения
-            if (banner_timeout > 0.0f)
+            if (banner_timeout > 0.0)
             {
                 banner_timeout -= dt;
-                if (banner_timeout <= 0.0f)
+                if (banner_timeout <= 0.0)
                 {
                     // Снимаем баннер и настраиваем уровень
                     the_state = GameState.INPROGRESS;
@@ -389,9 +389,9 @@ final class Engine
     private void field_draw()
     {
         // Рисуем пол
-        for (int y = 0; y < WORLD_DIM; ++y)
+        foreach (y; 0 .. WORLD_DIM)
         {
-            for (int x = 0; x < WORLD_DIM; ++x)
+            foreach (x; 0 .. WORLD_DIM)
             {
                 if (Cell.Attribute.OBSTACLE !in the_field.cells[y][x].attribs)
                     sprite_draw(sprites[SpriteIndexes.TILE].sprite,
@@ -402,12 +402,13 @@ final class Engine
             }
         }
         // Рисуем стены
-        for (int i = 0; i < WORLD_DIM; ++i)
+        foreach (i; 0 .. WORLD_DIM)
+        {
             sprite_draw(sprites[SpriteIndexes.RWALL].sprite,
                     ScreenPosition(DeskPosition([i, 0])), sizes.spr_scale);
-        for (int i = 0; i < WORLD_DIM; ++i)
             sprite_draw(sprites[SpriteIndexes.LWALL].sprite,
                     ScreenPosition(DeskPosition([0, i])), sizes.spr_scale);
+        }
         // Рисуем пушки
         foreach (ref aset; the_artillery.setting)
         {
@@ -442,10 +443,10 @@ final class Engine
                 break;
             case Unit.Type.Fireball:
                 sprite_draw(sprites[SpriteIndexes.FBALL].sprite,
-                        upos, sizes.spr_scale * 0.5f);
+                        upos, sizes.spr_scale * 0.5);
                 break;
             case Unit.Type.Guard:
-                sprite_draw(sprites[upos.unit.speed.x >= 0.0f
+                sprite_draw(sprites[upos.unit.speed.x >= 0.0
                         ? SpriteIndexes.RGUARD : SpriteIndexes.LGUARD].sprite,
                         upos, sizes.spr_scale);
             }
@@ -455,7 +456,7 @@ final class Engine
     // Изменение состояния указанной мышкой ячейки
     private bool cell_flip(DeskPosition md)
     {
-        immutable auto dp = DeskPosition(the_character.position);
+        immutable dp = DeskPosition(the_character.position);
         if (md.x < 0 || md.x >= WORLD_DIM || md.y < 0 || md.y >= WORLD_DIM || md == dp)
             return false;
         if (Cell.Attribute.OBSTACLE in the_field.cells[md.y][md.x].attribs)
@@ -506,10 +507,10 @@ final class Engine
         if (centered)
         {
             sfFloatRect bounds = text.sfText_getLocalBounds();
-            text.sfText_setOrigin(sfVector2f(bounds.width / 2.0f, bounds.height / 2.0f));
+            text.sfText_setOrigin(sfVector2f(bounds.width / 2.0, bounds.height / 2.0));
         }
         else
-            text.sfText_setOrigin(sfVector2f(0.0f, 0.0f));
+            text.sfText_setOrigin(sfVector2f(0.0, 0.0));
         text.sfText_setPosition(to!sfVector2f(pos));
         window.sfRenderWindow_drawText(text, null);
         text.sfText_destroy();

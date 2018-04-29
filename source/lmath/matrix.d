@@ -97,7 +97,10 @@ struct Matrix(Type, uint Dx, uint Dy = Dx) if (isNumeric!Type)
                         return false;
                 }
                 else
-                    return data[y][x] == arg.data[y][x];
+                {
+                    if (data[y][x] != arg.data[y][x])
+                        return false;
+                }
         return true;
     }
 

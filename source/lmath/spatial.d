@@ -146,7 +146,7 @@ struct Point(Type, uint Dd, alias Transform) if (isNumeric!Type)
     void opAssign(TypeB, alias TransformB)(auto ref in Point!(TypeB, Dd, TransformB) arg)
             if (isNumeric!TypeB)
     {
-        static immutable auto zt = TransformType();
+        static immutable zt = TransformType();
         static if (isIntegral!TypeB)
             dm.fromLonger((Matrix!(BestFloatingPoint!(Transform.TypePublic,
                     TransformB.TypePublic).type, Dd, 1)(arg.dm) + 0.5) * getSetAdjust!(Point!(TypeB,

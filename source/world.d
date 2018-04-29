@@ -156,9 +156,9 @@ final class Character : Unit
             super.move(tdelta);
         if (way.path.empty)
             return;
-        if ((speed.x > 0.0f && position.x >= way.neigpos.x) || (speed.x < 0.0f
-                && position.x <= way.neigpos.x) || (speed.y > 0.0f
-                && position.y >= way.neigpos.y) || (speed.y < 0.0f && position.y <= way.neigpos.y))
+        if ((speed.x > 0.0 && position.x >= way.neigpos.x) || (speed.x < 0.0
+                && position.x <= way.neigpos.x) || (speed.y > 0.0
+                && position.y >= way.neigpos.y) || (speed.y < 0.0 && position.y <= way.neigpos.y))
         {
             // Этап завершен
             if (way.stage + 1 >= way.path.length)
@@ -230,7 +230,7 @@ final class Guard : Unit
     override void move(float tdelta)
     {
         super.move(tdelta);
-        immutable auto dp = DeskPosition(position);
+        immutable dp = DeskPosition(position);
         if (Cell.Attribute.GUARDBACKW in the_field.cells[dp.y][dp.x].attribs)
             speed.x = -fabs(speed.x);
         if (Cell.Attribute.GUARDFORW in the_field.cells[dp.y][dp.x].attribs)
@@ -272,8 +272,8 @@ void world_setup()
     lists_clear();
 
     // Размечаем поле
-    for (int y = 0; y < WORLD_DIM; y++)
-        for (int x = 0; x < WORLD_DIM; x++)
+    foreach (y; 0 .. WORLD_DIM)
+        foreach (x; 0 .. WORLD_DIM)
             the_field.cells[y][x].attribs.clear();
     the_field.cells[0][WORLD_DIM - 1].attribs |= Cell.Attribute.EXIT; // Позиция выхода
     the_field.cells[2][0].attribs |= Cell.Attribute.GUARDFORW; // Вешка направления движения охраны
@@ -292,7 +292,7 @@ void world_setup()
     unit.speed = Speed([GUARD_B_SPEED, 0.0]);
     // Артиллерия
     Artillery.Setting[WORLD_DIM * 2 - 2] apositions;
-    for (int i = 0; i < WORLD_DIM - 1; i++)
+    foreach (i; 0 ..WORLD_DIM - 1)
     {
         apositions[i].position = DeskPosition([i, 0]);
         apositions[i].speed = Speed([0.0, deviation_apply(ART_B_SPEED, ART_DEV)]),
@@ -317,25 +317,25 @@ void move_do(float tdelta)
 {
     Unit unit;
     // Перемещаем существующие юниты и удаляем отжившие
-    for (int i = 0; i < the_alives.length; ++i)
+    for (int i; i < the_alives.length; ++i)
     {
         unit = the_alives[i];
         unit.move(tdelta);
-        if (unit.position.x > 1.0f || unit.position.x < -1.0f
-                || unit.position.y > 1.0f || unit.position.y < -1.0f)
+        if (unit.position.x > 1.0 || unit.position.x < -1.0
+                || unit.position.y > 1.0 || unit.position.y < -1.0)
             the_alives.linearRemove(the_alives[i .. i + 1]);
     }
     // Генерируем новые выстрелы
     foreach (ref aset; the_artillery.setting)
     {
         aset.timeout -= tdelta;
-        if (aset.timeout <= 0.0f)
+        if (aset.timeout <= 0.0)
         {
             aset.timeout = aset.delay;
             unit = new Fireball();
             the_alives.insert(unit);
             unit.position = aset.position;
-            if (aset.speed.x > 0.0f)
+            if (aset.speed.x > 0.0)
                 unit.position.x = unit.position.x - CELL_HW;
             else
                 unit.position.y = unit.position.y - CELL_HW;
@@ -349,7 +349,7 @@ void move_do(float tdelta)
 // Проверка состояния игры
 void state_check()
 {
-    immutable auto dp = DeskPosition(the_character.position);
+    immutable dp = DeskPosition(the_character.position);
     if (Cell.Attribute.EXIT in the_field.cells[dp.y][dp.x].attribs)
     {
         the_state = GameState.WIN;
@@ -378,7 +378,7 @@ void lists_clear()
 
 private float deviation_apply(float val, float dev)
 {
-    return (2 * dev * uniform(0.0f, 1.0f) - dev + 1) * val;
+    return (2 * dev * uniform(0.0, 1.0) - dev + 1) * val;
 }
 
 private int complexity_apply(int val, float kc)
