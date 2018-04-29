@@ -421,7 +421,7 @@ alias MatrixF2 = Matrix!(float, 2);
 alias VectorF3 = Matrix!(float, 3, 1);
 alias VectorF2 = Matrix!(float, 2, 1);
 
-template BestFloatingPoint(Ta, Tb)
+package template BestFloatingPoint(Ta, Tb)
 {
     static if (isFloatingPoint!Ta)
     {
