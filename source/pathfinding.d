@@ -50,8 +50,8 @@ class AStar(
             } 
         } 
 
-        static const Directions[8] dirs = [[ -1, -1, 14 ],[ 0, -1, 10 ],[ 1, -1, 14 ],[ -1, 0, 10 ],
-                                           [ 1, 0, 10 ],[ -1, 1, 14 ],[ 0, 1, 10 ],[ 1, 1, 14 ]];
+        static const Directions[8] dirs = [[ -1, -1, 19 ],[ 0, -1, 10 ],[ 1, -1, 19 ],[ -1, 0, 10 ],
+                                           [ 1, 0, 10 ],[ -1, 1, 19 ],[ 0, 1, 10 ],[ 1, 1, 19 ]];
         BinaryHeap!(Array!AttrsPtr, "a.pa.fscore > b.pa.fscore") opened;
         Array!AttrsPtr temp_buff; // Для переупорядочивания
     }
@@ -177,8 +177,8 @@ class AStar(
             TCoords cp = start_p;
             foreach_reverse (ref pv; path)
             {
-                cp.x += pv.x;
-                cp.y += pv.y;
+                cp.x = cp.x + pv.x;
+                cp.y = cp.y + pv.y;
                 pv = cp;
             }
         }
@@ -190,7 +190,8 @@ class AStar(
 
         static TWeight cost_estimate(ref const TCoords a, ref const TCoords b)
         {
-            return cast(TWeight)(10 * (abs(b.x - a.x) + abs(b.y - a.y)));
+            TCoords dt; dt.x = b.x - a.x; dt.y = b.y - a.y;
+            return cast(TWeight)(10 * (dt.x * dt.x + dt.y * dt.y));
         }
 
         static bool inbound(int x, int y)

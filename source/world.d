@@ -5,10 +5,21 @@ import std.container.dlist;
 import std.algorithm.comparison;
 import std.random;
 import std.math;
+import lmath.matrix;
+import lmath.spatial;
 import settings;
 import flagset;
 import pathfinding;
 import main;
+
+////////////////////////////////////////////////////////////////////////////////
+// Использующиеся системы координат
+
+alias SpacePosition = Point!(float, 2, MatrixF3().ldIdentity());
+alias ScreenPosition = Point!(float, 2, MatrixF3().ldIdentity.rotate(PI_4)
+        .translate(HYP2 / 2, HYP2 / 2));
+alias DeskPosition = Point!(int, 2, MatrixF3().ldIdentity.translate(1.0, 1.0)
+        .scale(WORLD_DIM / 2, WORLD_DIM / 2));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Основные объекты
@@ -21,22 +32,19 @@ Artillery the_artillery; // Все пушки
 Character the_character; // Указатель на юнит главного героя, содержащийся в общем списке
 SoundsQueue the_sounds; // Очередь звуков
 
-private struct Reals2 {
-    float x = 0.0f, y = 0.0f;
-}
-
-alias SpacePosition = Reals2;
-alias Speed = Reals2;
+alias Speed = SpacePosition;
 
 // Состояние игры
-enum GameState {
+enum GameState
+{
     INPROGRESS,
     LOSS,
     WIN
 }
 
 // Звуковое событие
-enum SoundEvent {
+enum SoundEvent
+{
     SHOT,
     HIT,
     LVLUP
@@ -49,7 +57,8 @@ alias SoundsQueue = DList!SoundEvent; // Очередь звуков
 struct Cell
 {
     // Какие-либо атрибуты клетки
-    enum Attribute {
+    enum Attribute
+    {
         OBSTACLE, // Препятствие
         EXIT, // Зона выхода
         GUARDFORW, // Охране вперёд
@@ -58,11 +67,7 @@ struct Cell
 
     alias Attributes = Set!Attribute;
 
-    // Позиция на игровом поле
-    struct Coordinates {
-        int x, y;
-    }
-
+    DeskPosition coordinates;
     Attributes attribs;
 
     this(Attributes attrs)
@@ -79,41 +84,29 @@ final class Field
 
     // Интерфейсный метод для AStar
     bool isobstacle(int x, int y) const
-    { 
-        return Cell.Attribute.OBSTACLE in cells[y][x].attribs; 
-    }
-
-    static void cell_to_pos(out SpacePosition position, int x, int y)
     {
-        position.x = to_space_dim(x);
-        position.y = to_space_dim(y);
-    }
-
-    static void pos_to_cell(out int x, out int y, ref const SpacePosition position)
-    {
-        float k = WORLD_DIM / 2.0f;
-        x = cast(int)floor((position.x + 1.0f) * k);
-        y = cast(int)floor((position.y + 1.0f) * k);
+        return Cell.Attribute.OBSTACLE in cells[y][x].attribs;
     }
 }
 
-alias Path = Array!(Cell.Coordinates); // Оптимальный путь между ячейками
-alias FieldsAStar = AStar!(WORLD_DIM, WORLD_DIM, Cell.Coordinates, Field); // AStar, подогнанный к Field
+alias Path = Array!(DeskPosition); // Оптимальный путь между ячейками
+alias FieldsAStar = AStar!(WORLD_DIM, WORLD_DIM, DeskPosition, Field); // AStar, подогнанный к Field
 
 ////////////////////////////////////////////////////////////////////////////////
 // Базовый класс игровых юнитов
 class Unit
 {
     // Спецификация юнита
-    enum Type {
-        Unit,      // Базовый тип
+    enum Type
+    {
+        Unit, // Базовый тип
         Character, // Главный герой
-        Guard,     // Стажник
-        Fireball   // Выстрел
+        Guard, // Стажник
+        Fireball // Выстрел
     }
 
-    float size = U_SIZE;  // Радиус юнита
-    SpacePosition position;  // Положение в двухмерном пространстве
+    float size = U_SIZE; // Радиус юнита
+    SpacePosition position; // Положение в двухмерном пространстве
     Speed speed; // Скорость перемещения
 
     Type id()
@@ -124,16 +117,14 @@ class Unit
     // Столкнулись ли с другим юнитом
     final bool is_collided(const Unit unit)
     {
-        float a = position.x - unit.position.x;
-        float b = position.y - unit.position.y;
-        return sqrt(a * a + b * b) < size + unit.size;
+        immutable t = position - unit.position;
+        return t.x * t.x + t.y * t.y < size * size + unit.size * unit.size;
     }
 
     // Осуществляем ход
     void move(float tdelta)
     {
-        position.x += speed.x * tdelta;
-        position.y += speed.y * tdelta;
+        position += speed * tdelta;
     }
 }
 
@@ -143,8 +134,9 @@ alias UnitsList = Array!Unit;
 final class Character : Unit
 {
     // Характеристики пути к цели
-    struct Target {
-        Cell.Coordinates neighbour, target; // Ближайшая ячейка на пути и целевая
+    struct Target
+    {
+        DeskPosition neighbour, target; // Ближайшая ячейка на пути и целевая
         SpacePosition neigpos; // Пространственные координаты центра ближайшей ячейки
         Path path; // Список директив смены направления
         uint stage; // Этап на пути
@@ -160,37 +152,28 @@ final class Character : Unit
 
     override void move(float tdelta)
     {
-        int x, y;
-        if (the_state == GameState.INPROGRESS)
-            // Перемещаемся только во время игры
+        if (the_state == GameState.INPROGRESS) // Перемещаемся только во время игры
             super.move(tdelta);
         if (way.path.empty)
             return;
-        if ((speed.x > 0.0f && position.x >= way.neigpos.x)
-            || (speed.x < 0.0f && position.x <= way.neigpos.x)
-            || (speed.y > 0.0f && position.y >= way.neigpos.y)
-            || (speed.y < 0.0f && position.y <= way.neigpos.y))
+        if ((speed.x > 0.0f && position.x >= way.neigpos.x) || (speed.x < 0.0f
+                && position.x <= way.neigpos.x) || (speed.y > 0.0f
+                && position.y >= way.neigpos.y) || (speed.y < 0.0f && position.y <= way.neigpos.y))
         {
             // Этап завершен
-            position = way.neigpos;
-            if (way.stage >= way.path.length - 1)
+            if (way.stage + 1 >= way.path.length)
             {
                 // Цель достигнута
                 way.path.clear();
                 way.stage = 0;
-                Field.pos_to_cell(x, y, position);
-                way.target.x = x;
-                way.target.y = y;
+                way.target = way.neigpos;
             }
             else
             {
                 // Следующий этап
-                Field.pos_to_cell(x, y, position);
                 ++way.stage;
-                auto delta = way.path[way.path.length - way.stage - 1];
-                way.neighbour.x += delta.x;
-                way.neighbour.y += delta.y;
-                Field.cell_to_pos(way.neigpos, way.neighbour.x, way.neighbour.y);
+                way.neighbour += way.path[way.path.length - way.stage - 1];
+                way.neigpos = way.neighbour;
             }
             set_speed();
         }
@@ -201,57 +184,36 @@ final class Character : Unit
     {
         if (way.path.empty)
         {
-            speed.x = 0.0f;
-            speed.y = 0.0f;
+            speed = Speed([0.0, 0.0]);
             return;
         }
-        auto dx = way.neigpos.x - position.x;
-        auto dy = way.neigpos.y - position.y;
-        auto adx = fabs(dx);
-        auto ady = fabs(dy);
-        if ((adx < typeof(adx).epsilon && ady < typeof(ady).epsilon) || way.path.empty)
+        auto d = way.neigpos - position;
+        if (d.atzero())
+        {
+            speed = Speed([0.0, 0.0]);
             return;
-        if (adx > ady)
-        {
-            auto a = atan(ady / adx);
-            speed.x = copysign(CHAR_B_SPEED * cos(a), dx);
-            speed.y = copysign(CHAR_B_SPEED * sin(a), dy);
         }
-        else
-        {
-            auto a = atan(adx / ady);
-            speed.x = copysign(CHAR_B_SPEED * sin(a), dx);
-            speed.y = copysign(CHAR_B_SPEED * cos(a), dy);
-        }
+        speed = d.normalized() * CHAR_B_SPEED;
     }
 
     // Запрос обсчета пути
-    void way_new_request(int tx, int ty)
+    void way_new_request(ref in DeskPosition pos)
     {
-        int x, y;
-        speed.x = 0.0f;
-        speed.y = 0.0f;
-        Field.pos_to_cell(x, y, position);
-        way.target.x = tx;
-        way.target.y = ty;
-        the_coworker.path_find_request(the_field, x, y, tx, ty);
+        speed = Speed([0.0, 0.0]);
+        way.target = pos;
+        the_coworker.path_find_request(the_field, DeskPosition(position), pos);
         path_requested = true;
     }
 
     // Обработка рассчитанного пути
     void way_new_process()
     {
-        Cell.Coordinates delta;
-        int x, y;
         way.path = the_coworker.path;
-        Field.pos_to_cell(x, y, position);
         if (!way.path.empty)
         {
             way.stage = 0;
-            delta = way.path[way.path.length - 1];
-            way.neighbour.x = x + delta.x;
-            way.neighbour.y = y + delta.y;
-            Field.cell_to_pos(way.neigpos, way.neighbour.x, way.neighbour.y);
+            way.neighbour = DeskPosition(position) + way.path[way.path.length - 1];
+            way.neigpos = way.neighbour;
         }
         set_speed();
     }
@@ -267,23 +229,22 @@ final class Guard : Unit
 
     override void move(float tdelta)
     {
-        int x, y;
         super.move(tdelta);
-        Field.pos_to_cell(x, y, position);
-        if (Cell.Attribute.GUARDBACKW in the_field.cells[y][x].attribs)
+        immutable auto dp = DeskPosition(position);
+        if (Cell.Attribute.GUARDBACKW in the_field.cells[dp.y][dp.x].attribs)
             speed.x = -fabs(speed.x);
-        if (Cell.Attribute.GUARDFORW in the_field.cells[y][x].attribs)
+        if (Cell.Attribute.GUARDFORW in the_field.cells[dp.y][dp.x].attribs)
             speed.x = fabs(speed.x);
     }
 }
 
 // Выстрел
-final class Fireball : Unit 
+final class Fireball : Unit
 {
     override Type id()
     {
         return Type.Fireball;
-    } 
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -291,8 +252,9 @@ final class Fireball : Unit
 final class Artillery
 {
     // Настройки ведения огня
-    struct Setting {
-        Cell.Coordinates position;
+    struct Setting
+    {
+        DeskPosition position;
         Speed speed;
         float delay;
         float timeout;
@@ -319,37 +281,32 @@ void world_setup()
     // Главный герой
     the_character = new Character();
     the_alives.insert(the_character);
-    Field.cell_to_pos(the_character.position, 0, WORLD_DIM - 1);
-    the_character.way.target.x = 0;
-    the_character.way.target.y = WORLD_DIM - 1;
+    the_character.position = DeskPosition([0, WORLD_DIM - 1]);
+    the_character.way.target = DeskPosition([0, WORLD_DIM - 1]);
     the_character.set_speed();
     // Стража
     Unit unit = new Guard();
     the_alives.insert(unit);
-    Field.cell_to_pos(unit.position, 0, 2);
-    unit.size = U_SIZE * 1.5f;
-    unit.speed.x = GUARD_B_SPEED;
-    unit.speed.y = 0.0f;
+    unit.position = DeskPosition([0, 2]);
+    unit.size = U_SIZE * 1.5;
+    unit.speed = Speed([GUARD_B_SPEED, 0.0]);
     // Артиллерия
     Artillery.Setting[WORLD_DIM * 2 - 2] apositions;
     for (int i = 0; i < WORLD_DIM - 1; i++)
     {
-        apositions[i].position.x = i;
-        apositions[i].position.y = 0;
-        apositions[i].speed.x = 0.0f;
-        apositions[i].speed.y = deviation_apply(ART_B_SPEED, ART_DEV);
-        apositions[i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
-        apositions[i].timeout = 0.0f;
-        apositions[WORLD_DIM - 1 + i].position.x = 0;
-        apositions[WORLD_DIM - 1 + i].position.y = i;
-        apositions[WORLD_DIM - 1 + i].speed.x = deviation_apply(complexity_apply(ART_B_SPEED, LEVEL_COMPL), ART_DEV);
-        apositions[WORLD_DIM - 1 + i].speed.y = 0.0f;
+        apositions[i].position = DeskPosition([i, 0]);
+        apositions[i].speed = Speed([0.0, deviation_apply(ART_B_SPEED, ART_DEV)]),
+            apositions[i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
+        apositions[i].timeout = 0.0;
+        apositions[WORLD_DIM - 1 + i].position = DeskPosition([0, i]);
+        apositions[WORLD_DIM - 1 + i].speed = Speed([deviation_apply(complexity_apply(ART_B_SPEED,
+                LEVEL_COMPL), ART_DEV), 0.0]);
         apositions[WORLD_DIM - 1 + i].delay = deviation_apply(ART_B_DELAY, ART_DEV);
-        apositions[WORLD_DIM - 1 + i].timeout = 0.0f;
+        apositions[WORLD_DIM - 1 + i].timeout = 0.0;
     }
     randomShuffle(apositions[]);
     auto acount = min(complexity_apply(ART_COUNT, LEVEL_COMPL), apositions.length);
-    foreach (ref pos; apositions[0..acount])
+    foreach (ref pos; apositions[0 .. acount])
     {
         the_artillery.setting.insert(pos);
     }
@@ -364,9 +321,9 @@ void move_do(float tdelta)
     {
         unit = the_alives[i];
         unit.move(tdelta);
-        if (unit.position.x > 1.0f || unit.position.x < -1.0f 
-            || unit.position.y > 1.0f || unit.position.y < -1.0f)
-            the_alives.linearRemove(the_alives[i..i+1]);
+        if (unit.position.x > 1.0f || unit.position.x < -1.0f
+                || unit.position.y > 1.0f || unit.position.y < -1.0f)
+            the_alives.linearRemove(the_alives[i .. i + 1]);
     }
     // Генерируем новые выстрелы
     foreach (ref aset; the_artillery.setting)
@@ -377,11 +334,11 @@ void move_do(float tdelta)
             aset.timeout = aset.delay;
             unit = new Fireball();
             the_alives.insert(unit);
-            Field.cell_to_pos(unit.position, aset.position.x, aset.position.y);
+            unit.position = aset.position;
             if (aset.speed.x > 0.0f)
-                unit.position.x -= CELL_HW;
+                unit.position.x = unit.position.x - CELL_HW;
             else
-                unit.position.y -= CELL_HW;
+                unit.position.y = unit.position.y - CELL_HW;
             unit.size = U_SIZE;
             unit.speed = aset.speed;
             the_sounds.insert(SoundEvent.SHOT);
@@ -392,9 +349,8 @@ void move_do(float tdelta)
 // Проверка состояния игры
 void state_check()
 {
-    int x, y;
-    Field.pos_to_cell(x, y, the_character.position);
-    if (Cell.Attribute.EXIT in the_field.cells[y][x].attribs)
+    immutable auto dp = DeskPosition(the_character.position);
+    if (Cell.Attribute.EXIT in the_field.cells[dp.y][dp.x].attribs)
     {
         the_state = GameState.WIN;
         return;
@@ -420,11 +376,6 @@ void lists_clear()
     the_sounds.clear();
 }
 
-float to_space_dim(int v)
-{
-    return cast(float)(v + 1) / WORLD_DIM * 2.0f - CELL_HW - 1.0f;
-}
-
 private float deviation_apply(float val, float dev)
 {
     return (2 * dev * uniform(0.0f, 1.0f) - dev + 1) * val;
@@ -439,4 +390,3 @@ private float complexity_apply(float val, float kc)
 {
     return val + val * level * kc;
 }
-

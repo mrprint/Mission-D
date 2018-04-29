@@ -54,7 +54,7 @@ private struct Coworker
         }
         
         struct Request {
-            Cell.Coordinates start, finish;
+            DeskPosition start, finish;
         }
 
         Tid childTid;
@@ -69,14 +69,14 @@ private struct Coworker
     }
 
     // Запрос на расчёт пути
-    void path_find_request(Field _field, int st_x, int st_y, int fn_x, int fn_y)
+    void path_find_request(Field _field, DeskPosition st, DeskPosition fn)
     {
         Request request;
         if (shared_data.ready)
         {
             shared_data.field = _field;
-            request.start.x = st_x; request.start.y = st_y;
-            request.finish.x = fn_x; request.finish.y = fn_y;
+            request.start = st;
+            request.finish = fn;
             shared_data.ready = false;
             send(childTid, request);
         }

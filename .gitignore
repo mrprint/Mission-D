@@ -10,6 +10,7 @@ out/
 *.iml
 .dlangide*
 .vs/
+.idea/
 dub.userprefs
 *.pdb
 *.sln
