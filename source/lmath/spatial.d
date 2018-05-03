@@ -45,23 +45,7 @@ struct Point(Type, uint Dd, alias Transform) if (isNumeric!Type)
     auto dot(TypeB)(auto ref in Point!(TypeB, Dd, Transform) arg) pure const 
             if (isNumeric!TypeB)
     {
-        static if (isFloatingPoint!Type)
-        {
-            static if (isFloatingPoint!TypeB)
-            {
-                static if (Type.sizeof > TypeB.sizeof)
-                    alias TypeW = Type;
-                else
-                    alias TypeW = TypeB;
-            }
-            else
-                alias TypeW = Type;
-        }
-        else
-        {
-            static if (isFloatingPoint!TypeB)
-                alias TypeW = TypeB;
-        }
+        alias TypeW = BestFloatingPoint!(Type, TypeB).type;
         TypeW acc = 0;
         foreach (x; 0u .. Dd)
             acc += cast(TypeW)(dm.data[0][x] * arg.dm.data[0][x]);
