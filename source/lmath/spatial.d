@@ -21,19 +21,12 @@ struct Point(Type, uint Dd, alias Transform) if (isNumeric!Type)
 
     this(ref in Type[Dd] data)
     {
-        foreach (i; 0u .. Dd)
-            dm.data[0][i] = data[i];
+        dm = data;
     }
 
     this(in Type[] data)
-    in
     {
-        assert(data.length == Dd);
-    }
-    body
-    {
-        foreach (i; 0u .. Dd)
-            dm.data[0][i] = data[i];
+        dm = data;
     }
 
     this(TypeB, alias TransformB)(auto ref in Point!(TypeB, Dd, TransformB) arg)
@@ -69,7 +62,7 @@ struct Point(Type, uint Dd, alias Transform) if (isNumeric!Type)
 
     Point opBinary(string op)(auto ref in Point arg) pure const if (op == "*")
     {
-        Matrix result = this;
+        Point result = this;
         result.dm.plaindata[] *= arg.dm.plaindata[];
         return result;
     }
